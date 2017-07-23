@@ -23,16 +23,26 @@
 
 // interface
 
-template <unsigned DIM, typename REAL = double>
+template <unsigned DIM = 3, typename REAL = double>
 class VectorND {
 public:
-    VectorND ();
-    VectorND (const REAL& r);
-    VectorND (const VectorND& vec);
-    template <typename... T> VectorND (T... r) : v_{r...} {};
-    ~VectorND () { }
-    const VectorND& operator= (const VectorND& v);
-    const VectorND& operator= (const REAL& r);
+//  default constructor; set all elements to zero
+    VectorND () : v_{} {};
+
+//  use default compiler-generated copy constructor
+    VectorND (const VectorND& vec) = default;
+
+//  variadic template constructor for intializing componenets
+    template <typename... T>
+        VectorND (T... r) : v_{r...} {};
+
+//  use default compiler-generated destructor
+    ~VectorND () = default;
+
+//  user default compiler-generated copy constructor
+    VectorND& operator= (const VectorND& v) = default;
+
+
     const VectorND& operator+= (const VectorND& vec);
     const VectorND& operator-= (const VectorND& vec);
     const VectorND& operator*= (const REAL& r);
@@ -50,49 +60,23 @@ public:
     VectorND get_unit () const;
     VectorND mult_elems (const VectorND& vec); // element-wise mutiplication
 
+    static VectorND<3, REAL>
+    cross (const VectorND<3, REAL>& v1, const VectorND<3, REAL>& v2)
+    {
+        static_assert(DIM == 3);
+        return VectorND();
+    }
+
+    static REAL
+    cross (const VectorND<2, REAL>& v1, const VectorND<2, REAL>& v2)
+    {
+        static_assert(DIM == 2);
+        return 0.0;
+    }
+
 private:
     REAL v_[DIM];
 };
-
-// default constructor
-template <unsigned DIM, typename REAL>
-VectorND<DIM, REAL>::VectorND ()
-{
-    for (unsigned i = 0; i < DIM; ++i) v_[i] = 0.0;
-}
-
-// constructor
-template <unsigned DIM, typename REAL>
-VectorND<DIM, REAL>::VectorND (const REAL& r)
-{
-    for (unsigned i = 0; i < DIM; ++i) v_[i] = r;
-}
-
-// copy constructor
-template <unsigned DIM, typename REAL>
-VectorND<DIM, REAL>::VectorND(const VectorND& v) 
-{
-    for (unsigned i = 0; i < DIM; ++i) v_[i] = v.v_[i];
-}
-
-
-template <unsigned DIM, typename REAL>
-const VectorND<DIM, REAL>&
-VectorND<DIM, REAL>::operator= (const VectorND& v)
-{
-    for (unsigned i = 0; i < DIM; ++i) v_[i] = v.v_[i];
-    return *this;
-}
-
-
-template <unsigned DIM, typename REAL>
-const VectorND<DIM, REAL>&
-VectorND<DIM, REAL>::operator= (const REAL& r)
-{
-    for (unsigned i = 0 ; i < DIM; ++i) v_[i] = r;
-    return *this;
-}
-
 
 template <unsigned DIM, typename REAL>
 const VectorND<DIM, REAL>&
@@ -110,7 +94,7 @@ const VectorND<DIM, REAL>&
 VectorND<DIM, REAL>::operator-= (const VectorND& v) 
 {
     for (unsigned i = 0; i < DIM; ++i) v[i] -= v.v_[i];  
-}  
+}
 
 
 template <unsigned DIM, typename REAL>
@@ -193,14 +177,14 @@ VectorND<DIM, REAL>::operator*(const VectorND& v) const
 
 template <unsigned DIM, typename REAL>
 REAL&
-VectorND<DIM, REAL>::operator[](unsigned i)
+VectorND<DIM, REAL>::operator[] (unsigned i)
 {
     return v_[i];
 }
 
 template <unsigned DIM, typename REAL>
 const REAL&
-VectorND<DIM, REAL>::operator[](unsigned i) const
+VectorND<DIM, REAL>::operator[] (unsigned i) const
 {
     return v_[i];
 }
@@ -243,18 +227,6 @@ VectorND<DIM, REAL>::mult_elems (const VectorND<DIM, REAL>& v)
     return v_tmp;
 }
 
-
-/*
-template <unsigned DIM, typename REAL>
-std::ostream& 
-operator<<( std::ostream& os, const VectorND<DIM, REAL>& vec )
-{
-    for (unsigned i=0; i< DIM; ++i )
-        os << std::setw(10) << vec(i);
-    os << std::endl;
-    return os;
-}
-*/
 
 
 #endif // TYPE_VECTORND_H_
