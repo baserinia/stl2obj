@@ -42,40 +42,70 @@ public:
 //  user default compiler-generated copy constructor
     VectorND& operator= (const VectorND& v) = default;
 
-
+//  vector assignment operators
     const VectorND& operator+= (const VectorND& vec);
     const VectorND& operator-= (const VectorND& vec);
     const VectorND& operator*= (const REAL& r);
     const VectorND& operator/= (const REAL& r);
-    VectorND operator- () const;
-    VectorND operator+ (const VectorND& vec) const;
-    VectorND operator- (const VectorND& vec) const;
-    VectorND operator* (const REAL& r) const;
-    VectorND operator/ (const REAL& r) const;
-    REAL operator* (const VectorND& vec) const;
-    REAL& operator[] (unsigned i);
-    const REAL& operator[] (unsigned i) const;
-    REAL get_magnit_sqr () const;
-    REAL get_magnit () const;
-    VectorND get_unit () const;
-    VectorND mult_elems (const VectorND& vec); // element-wise mutiplication
 
+//  return negative vector
+    VectorND operator- () const;
+
+//  add vectors
+    VectorND operator+ (const VectorND& vec) const;
+
+//  subtract vectos
+    VectorND operator- (const VectorND& vec) const;
+
+//  multiply by scalar
+    VectorND operator* (const REAL& r) const;
+
+//  divide by scalar
+    VectorND operator/ (const REAL& r) const;
+
+//  dot product
+    REAL operator* (const VectorND& vec) const;
+
+//  mutable component operator
+    REAL& operator[] (unsigned i);
+
+//  const component operator
+    const REAL& operator[] (unsigned i) const;
+
+//  return square of magnitude
+    REAL get_magnit_sqr () const;
+
+//  return magnitude
+    REAL get_magnit () const;
+
+//  return normalized vector
+    VectorND get_unit () const;
+
+//  element-wise multiplication
+    VectorND mult_elems (const VectorND& vec);
+
+//  cross-product of 3D vectors
     static VectorND<3, REAL>
     cross (const VectorND<3, REAL>& v1, const VectorND<3, REAL>& v2)
     {
         static_assert(DIM == 3);
-        return VectorND();
+        return VectorND<3, REAL> (
+            v1[1] * v2[2] - v1[2] * v2[1],
+            v1[2] * v2[0] - v1[0] * v2[2],
+            v1[0] * v2[1] - v1[1] * v2[0]
+        );
     }
 
+//  cross product for 2D vectors
     static REAL
     cross (const VectorND<2, REAL>& v1, const VectorND<2, REAL>& v2)
     {
         static_assert(DIM == 2);
-        return 0.0;
+        return v1[1] * v2[2] - v1[2] * v2[1];
     }
 
 private:
-    REAL v_[DIM];
+    REAL v_[DIM]; // actual data in vector
 };
 
 template <unsigned DIM, typename REAL>
