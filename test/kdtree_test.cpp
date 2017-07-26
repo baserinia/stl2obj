@@ -15,8 +15,10 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+#include <cstdlib>
 #include <iostream>
 #include <string>
+#include <random>
 #include "../src/vectornd.h"
 #include "../src/kdtree.h"
 
@@ -24,10 +26,19 @@
 // Unit test
 int main()
 {
-    VectorND<3, double> vec;
     KDTree<3, double> tree;
-    tree.insert(vec);
 
-    std::cout << "Finished!" << std::endl;
+//  for consistency, use the same seed
+    std::default_random_engine gen(0);
+
+//  generate random double between 0 and 1.
+    std::uniform_real_distribution<double> dis(0, 1);
+
+    for (int i = 0; i < 100; i++) {
+        VectorND<3, double> vec (dis(gen), dis(gen), dis(gen));
+        tree.insert(vec);
+    }
+
+    std::cout << "Terminated successfully!" << std::endl;
 }
 
