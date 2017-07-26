@@ -17,12 +17,17 @@
 
 #include <iostream>
 #include <string>
-
+#include "../src/vectornd.h"
+#include "../src/kdtree.h"
 
 
 // Unit test
 int main()
 {
-  std::cout << "Hello world!" << std::endl;
+    VectorND<3, double> vec;
+    KDTree<3, double> tree;
+    tree.insert(vec);
+
+    std::cout << "Finished!" << std::endl;
 }
 
