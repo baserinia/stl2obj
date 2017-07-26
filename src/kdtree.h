@@ -43,11 +43,16 @@ class KDTree {
 //  pointer to the root node
     Node* root_;
 
-//  vector of all points; this can be dynamically grow or shrink
+//  vector of all points; this can dynamically grow or shrink
+//  Note that this is the sinle data structure for storing points data. The
+//  tree has access only to elements of this vector, but there is no point
+//  data in the tree. This simplifies the algorithms and makes the API
+//  easier to use.
     std::vector<Point> data_;
 
 public: // methos
-//  default constructor
+//  default constructor; we start with 256 elements, but it doesn't matter.
+//  you can change this number if necessary.
     KDTree() : root_(nullptr) { data_.reserve(256); }
 
 //  default destructor
@@ -56,8 +61,7 @@ public: // methos
 //  insert a new point into the tree
     void insert(const Point& point) {
         data_.push_back(point);
-        int id = data_.size() - 1; // index of last element
-        root_ = insert(root_, id);
+        root_ = insert(root_, size());
     }
 
 //  get the current size
@@ -66,16 +70,12 @@ public: // methos
 //  This function is N^2 so it's very inefficient. It's included only for
 //  testing purpose to confirm the correctness of algorithm. Otherwise,
 //  it shouldn't be used in actual code.
-    int findNearestBruteForce(const Point& pt) {
-        return findNearestBruteForce(root_, pt);
-    }
+    int findNearestBruteForce(const Point& pt);
 
 //  This function is NlogN, so it should be used in actual code.
     int findNearest(const Point& pt);
 
 private: // methods
-//  private version of brute force find
-    int findNearestBruteForce(Node* node, const Point& pt) {return 0;}
     size_t size(Node* node);
     Node* insert(Node* node, int id);
     int findNearest(Node* node, const Point& point, REAL& minDist);
@@ -163,5 +163,22 @@ KDTree<DIM, REAL>::findParent(Node* node, const Point& point)
         return findParent(node->right_);
     }
 }
+
+template <int DIM, typename REAL>
+int
+KDTree<DIM, REAL>::findNearestBruteForce(const Point& pt)
+{
+    int index = -1;
+    REAL minD2 = std::numeric_limits<REAL>::max;
+    for (int i = 0; i < data_.size(); i++) {
+        REAL d2 = get_magnit_sqr(pt, data_[i]);
+        if (d2 < minD2) {
+            minD2 = d2;
+            index = i;
+        }
+    }
+    return index;
+}
+
 
 #endif // TYPE_KDTREE_H_
