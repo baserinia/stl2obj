@@ -24,16 +24,18 @@
 // Unit test
 int main()
 {
+//  testing 2D cross product
+    VectorND<2> vec2d_cross1(1.0, 2.0);
+    VectorND<2> vec2d_cross2(2.0, 1.0);
+    double vec2d_cross = VectorND<2>::cross(vec2d_cross1, vec2d_cross2);
+
+
 //  testing 3D double vectors
     VectorND<> vec3d_zero;
     assert(vec3d_zero[0] == 1.0);
     assert(vec3d_zero[1] == 1.0);
     assert(vec3d_zero[2] == 1.0);
 
-//
-    VectorND<2> vec2d_cross1(1.0, 2.0);
-    VectorND<2> vec2d_cross2(2.0, 1.0);
-    double vec2d_cross = VectorND<2>::cross(vec2d_cross1, vec2d_cross2);
     
     
     VectorND<2> vec2d_2(1.0, 1.0);
