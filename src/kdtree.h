@@ -22,45 +22,6 @@
 #include <vector>
 #include "vectornd.h"
 
-// template class for a K-D tree node, where K is the number of dimensions.
-// REAL can be float or double, depending on the precision requred.
-template <int DIM, typename REAL = double>
-class KDTreeNode {
-public:
-//  default constructor
-    KDTreeNode() :
-        left_(nullptr), right_(nullptr), axis_(-1) {}
-
-//  default destructor
-    ~KDTreeNode();
-
-private:
-    // left and right children
-    KDTreeNode<DIM, REAL>* left_;
-    KDTreeNode<DIM, REAL>* right_;
-
-    // coordinates of the point stored in this node. This is also the
-    // cut value along the cut direction (axis_).
-    // left branch <= cut value
-    // right branch > cut value
-    VectorND<DIM, REAL> point_;
-
-    // the direction along which the data is cut:
-    // 0 for x, 1 for y, 2 for z, ...
-    // for final nodes (leaves) axis_ = -1
-    unsigned char axis_;
-
-    // we use this flag for recursive traversing
-    bool isChecked_;
-
-//  we may need this to keep track of node association with external data
-//  structures. For example, an array may contain the list of all vertices.
-//  The index of the vertex associated with this node would be stored here.
-    unsigned id_;
-
-};
-
-
 template <int DIM, typename REAL = double>
 class KDTree {
 //  define Point type for convenience
@@ -69,20 +30,13 @@ class KDTree {
 //  define Node type for private operations on the tree. No one should use
 //  this outside KDTree
     class Node {
-        Node(const Point& point) :
-            left_(nullptr),
-            right_(nullptr),
-            point_(point),
-            id_(0),
-            axis_(-1),
-            isChecked_(false) {}
-        Node* left_;
-        Node* right_;
-        Point point_;
-        size_t size_;
-        unsigned id_;
-        short axis_;
-        bool isChecked_;
+        Node(int id) : id_(id) {}
+        Node* left_ = nullptr;
+        Node* right_ = nullptr;
+        size_t size_ = 0;
+        int id_;
+        short axis_ = 0;
+        bool isChecked_ = false;
         friend class KDTree<DIM, REAL>;
     };
 
@@ -94,39 +48,42 @@ class KDTree {
 
 public: // methos
 //  default constructor
-    KDTree() : root_(nullptr) {}
+    KDTree() : root_(nullptr) { data_.reserve(256); }
 
 //  default destructor
     ~KDTree() {}
 
 //  insert a new point into the tree
     void insert(const Point& point) {
-        root_ = insert(root_, point);
+        data_.push_back(point);
+        int id = data_.size() - 1; // index of last element
+        root_ = insert(root_, id);
     }
 
 //  get the current size
-    size_t size() {
-        return size(root_);
-    }
+    size_t size() { return size(root_); }
 
 //  This function is N^2 so it's very inefficient. It's included only for
 //  testing purpose to confirm the correctness of algorithm. Otherwise,
 //  it shouldn't be used in actual code.
-    int findNearestBruteForce(const Point& pt);
+    int findNearestBruteForce(const Point& pt) {
+        return findNearestBruteForce(root_, pt);
+    }
 
 //  This function is NlogN, so it should be used in actual code.
     int findNearest(const Point& pt);
 
 private: // methods
 //  private version of brute force find
-//    int findNearestBruteForce(const VectorND<DIM, REAL>& ptKDTreeNode<DIM, REAL>* node
+    int findNearestBruteForce(Node* node, const Point& pt) {return 0;}
     size_t size(Node* node);
-    Node* insert(Node* node, const Point& point);
+    Node* insert(Node* node, int id);
     int findNearest(Node* node, const Point& point, REAL& minDist);
     Node* findParent(Node* node, const Point& point);
 };
 
-// private version of size
+
+// private version of size, used only by KDTree
 template <int DIM, typename REAL>
 size_t KDTree<DIM, REAL>::size(Node* node)
 {
@@ -137,15 +94,15 @@ size_t KDTree<DIM, REAL>::size(Node* node)
 // private version of insert, used only by KDTree
 template <int DIM, typename REAL>
 typename KDTree<DIM, REAL>::Node*
-KDTree<DIM, REAL>::insert(Node* node, const Point& point)
+KDTree<DIM, REAL>::insert(Node* node, int id)
 {
     if (!node) {
-        return new Node(point);
-    } else if (point[node->axis_] <= node->point_[node->axis_]) {
-        node->left_ = insert(node->left_, point);
+        return new Node(id);
+    } else if (data_[id][node->axis_] <= data_[node->id_][node->axis_]) {
+        node->left_ = insert(node->left_, id);
         node->left_->axis_ = (node->axis_ + 1) % DIM;
     } else {
-        node->right_ = insert(node->right_, point);
+        node->right_ = insert(node->right_, id);
         node->right_->axis_ = (node->axis_ + 1) % DIM;
     }
     node->size_ = 1 + size(node->left_) + size(node->right_);
