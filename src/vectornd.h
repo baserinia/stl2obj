@@ -84,6 +84,20 @@ public:
 //  element-wise multiplication
     VectorND mult_elems (const VectorND& vec);
 
+//  get distance squared between two points
+    static REAL
+    get_dist_sqr(const VectorND<3, REAL>& v1, const VectorND<3, REAL>& v2)
+    {
+        return (v1 - v2).get_magnit_sqr();
+    }
+
+//  get distance between two points
+    static REAL
+    get_dist(const VectorND<3, REAL>& v1, const VectorND<3, REAL>& v2)
+    {
+        return (v1 - v2).get_magnit();
+    }
+
 //  cross-product of 3D vectors
     static VectorND<3, REAL>
     cross (const VectorND<3, REAL>& v1, const VectorND<3, REAL>& v2)
