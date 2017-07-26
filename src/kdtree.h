@@ -61,11 +61,11 @@ public: // methos
 //  insert a new point into the tree
     void insert(const Point& point) {
         data_.push_back(point);
-        root_ = insert(root_, size());
+        root_ = insert(root_, size() - 1);
     }
 
 //  get the current size
-    size_t size() { return size(root_); }
+    size_t size() { return data_.size(); }
 
 //  This function is N^2 so it's very inefficient. It's included only for
 //  testing purpose to confirm the correctness of algorithm. Otherwise,
@@ -74,6 +74,11 @@ public: // methos
 
 //  This function is NlogN, so it should be used in actual code.
     int findNearest(const Point& pt);
+
+//  return the point from its id
+    Point getPoint(int index) {
+        return data_[index];
+    }
 
 private: // methods
     size_t size(Node* node);
@@ -109,23 +114,34 @@ KDTree<DIM, REAL>::insert(Node* node, int id)
     return node;
 }
 
-
+//  Find the nearest point in the data set to "point".
+//  This is the public version of this function. It does two things:
+//  1) It finds the potential tree node were "point" to be inserted into tree.
+//  2) It traverses the tree once more to find all points that might be closer
+//     to point.
+//  return value: index of the nearest node
 template <int DIM, typename REAL>
 int KDTree<DIM, REAL>::findNearest(const Point& point)
 {
     Node* parent = findParent(root_, point);
     if (!parent) return -1;
-    REAL minDist = get_distance(point, parent->point_);
-    Node* better = findNearest(root_, point, minDist);
-    return (better >= 0) ? better->id_ : parent->id_;
+    REAL minDist = Point::get_dist(point, data_[parent->id_]);
+    int better = findNearest(root_, point, minDist);
+    return (better >= 0) ? better : parent->id_;
+//    return parent->id_;
 }
 
+//  Find the nearest point in the data set to "point"
+//  This is the private version of this function. Although it works for
+//  arbitrary large values of "minDist", it's only efficient for small values
+//  of minDist. For large values of minDist, it behaves like a brute-force
+//  search.
 template <int DIM, typename REAL>
 int
 KDTree<DIM, REAL>::findNearest(Node* node, const Point& point, REAL& minDist)
 {
     if (!node) return -1;
-    REAL d = get_distance(point, node->point_);
+    REAL d = Point::get_dist(point, data_[node->id_]);
 
     int result = -1;
     if (d < minDist) {
@@ -133,13 +149,13 @@ KDTree<DIM, REAL>::findNearest(Node* node, const Point& point, REAL& minDist)
         minDist = d;
     }
 
-    REAL dp = std::abs(node->point_[node->axis_] - point[node->axis_]);
+    REAL dp = std::abs(data_[node->id_][node->axis_] - point[node->axis_]);
     if (dp < minDist) {
         int pt = findNearest(node->left_, point, minDist);
         if (pt >= 0) result = pt;
         pt = findNearest(node->right_, point, minDist);
         if (pt >= 0) result = pt;
-    } else if (point[node->axis_] <= node->point_[node->axis_]) {
+    } else if (point[node->axis_] <= data_[node->id_][node->axis_]) {
         int pt = findNearest(node->left_, point, minDist);
         if (pt >= 0) result = pt;
     } else {
@@ -155,12 +171,10 @@ KDTree<DIM, REAL>::findParent(Node* node, const Point& point)
 {
     if (!node) {
         return nullptr;
-    } else if (node->left_ && node->right_) {
-        return node;
-    } else if (point[node->axis_] <= node->point_[node->axis_]) {
-        return findParent(node->left_);
+    } else if (point[node->axis_] <= data_[node->id_][node->axis_]) {
+        return node->left_ ? findParent(node->left_, point) : node;
     } else {
-        return findParent(node->right_);
+        return node->right_ ? findParent(node->right_, point) : node;
     }
 }
 
@@ -169,9 +183,9 @@ int
 KDTree<DIM, REAL>::findNearestBruteForce(const Point& pt)
 {
     int index = -1;
-    REAL minD2 = std::numeric_limits<REAL>::max;
+    REAL minD2 = std::numeric_limits<REAL>::max();
     for (int i = 0; i < data_.size(); i++) {
-        REAL d2 = get_magnit_sqr(pt, data_[i]);
+        REAL d2 = Point::get_dist_sqr(pt, data_[i]);
         if (d2 < minD2) {
             minD2 = d2;
             index = i;
