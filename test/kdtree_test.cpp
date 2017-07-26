@@ -15,30 +15,63 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-#include <cstdlib>
+#include <cstdio>
 #include <iostream>
 #include <string>
 #include <random>
+#include <chrono>
+#include <cassert>
 #include "../src/vectornd.h"
 #include "../src/kdtree.h"
-
 
 // Unit test
 int main()
 {
-    KDTree<3, double> tree;
-
 //  for consistency, use the same seed
     std::default_random_engine gen(0);
 
 //  generate random double between 0 and 1.
     std::uniform_real_distribution<double> dis(0, 1);
 
-    for (int i = 0; i < 100; i++) {
-        VectorND<3, double> vec (dis(gen), dis(gen), dis(gen));
+//  create a 3D-tree of double precision
+    KDTree<3> tree; 
+    for (int i = 0; i < 100000; i++) {
+        VectorND<> vec (dis(gen), dis(gen), dis(gen));
         tree.insert(vec);
     }
 
-    std::cout << "Terminated successfully!" << std::endl;
+    std::chrono::duration<double> delt1(0);
+    std::chrono::duration<double> delt2(0);
+
+//  let's find the nearest point to 1000 random points
+    for (int i = 0; i < 1000; i++) {
+        VectorND<> center (dis(gen), dis(gen), dis(gen));
+
+//      reset timer
+        auto t0 = std::chrono::high_resolution_clock::now();
+
+//      we use brute force search for testing
+        int index1 = tree.findNearestBruteForce(center);
+        VectorND<> pt1 = tree.getPoint(index1);
+
+//      measure brute force search time
+        auto t1 = std::chrono::high_resolution_clock::now();
+        delt1 += t1 - t0;
+
+//      let's test the tree search
+        int index2 = tree.findNearest(center);
+        VectorND<> pt2 = tree.getPoint(index2);
+
+//      measure KD tree search time
+        auto t2 = std::chrono::high_resolution_clock::now();
+        delt2 += t2 - t1;
+
+//      fail if the search results are different
+        assert(index1 == index2);
+    }
+
+    printf("Brute force time: %.6g sec\n", delt1.count());
+    printf("KD tree time:     %.6g sec\n", delt2.count());
+    printf("Terminated successfully!\n", delt2.count());
 }
 
