@@ -30,10 +30,10 @@ public:
 
     void dispatch(Geometry& model) override {
         std::cout << "Saving OBJ file: " << filename_ << std::endl;
-        save();
+        save(model);
     }
 
-    void save() {}
+    void save(Geometry& model);
 };
 
 #endif // TYPE_EXPORTOBJ_H_
