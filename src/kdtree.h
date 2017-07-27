@@ -31,12 +31,12 @@ class KDTree {
 //  this outside KDTree
     class Node {
         Node(int id) : id_(id) {}
+        ~Node() { delete left_; delete right_; }
         Node* left_ = nullptr;
         Node* right_ = nullptr;
-        size_t size_ = 0;
-        int id_;
-        short axis_ = 0;
-        bool isChecked_ = false;
+        unsigned id_;
+        unsigned size_ = 0;
+        signed char axis_ = 0;
         friend class KDTree<DIM, REAL>;
     };
 
@@ -51,12 +51,19 @@ class KDTree {
     std::vector<Point> data_;
 
 public: // methos
-//  default constructor; we start with 256 elements, but it doesn't matter.
-//  you can change this number if necessary.
-    KDTree() : root_(nullptr) { data_.reserve(256); }
+//  default constructor
+    KDTree() : root_(nullptr) {}
 
 //  default destructor
-    ~KDTree() {}
+    ~KDTree() { delete root_; }
+
+//  delete copy constructor, assignment operator, move constructor, and
+//  move assignment operator. we don't want someone accidentally copies a
+//  search tree
+    KDTree(const KDTree&) = delete;
+    KDTree(KDTree&&) = delete;
+    KDTree& operator=(const KDTree&) = delete;
+    KDTree& operator=(KDTree&&) = delete;
 
 //  insert a new point into the tree
     void insert(const Point& point) {
@@ -125,7 +132,7 @@ int KDTree<DIM, REAL>::findNearest(const Point& point)
 {
     Node* parent = findParent(root_, point);
     if (!parent) return -1;
-    REAL minDist = Point::get_dist(point, data_[parent->id_]);
+    REAL minDist = Point::get_dist_sqr(point, data_[parent->id_]);
     int better = findNearest(root_, point, minDist);
     return (better >= 0) ? better : parent->id_;
 //    return parent->id_;
@@ -141,7 +148,7 @@ int
 KDTree<DIM, REAL>::findNearest(Node* node, const Point& point, REAL& minDist)
 {
     if (!node) return -1;
-    REAL d = Point::get_dist(point, data_[node->id_]);
+    REAL d = Point::get_dist_sqr(point, data_[node->id_]);
 
     int result = -1;
     if (d < minDist) {
@@ -149,8 +156,8 @@ KDTree<DIM, REAL>::findNearest(Node* node, const Point& point, REAL& minDist)
         minDist = d;
     }
 
-    REAL dp = std::abs(data_[node->id_][node->axis_] - point[node->axis_]);
-    if (dp < minDist) {
+    REAL dp = data_[node->id_][node->axis_] - point[node->axis_];
+    if (dp * dp < minDist) {
         int pt = findNearest(node->left_, point, minDist);
         if (pt >= 0) result = pt;
         pt = findNearest(node->right_, point, minDist);
@@ -165,6 +172,9 @@ KDTree<DIM, REAL>::findNearest(Node* node, const Point& point, REAL& minDist)
     return result;
 }
 
+//  Give a point "point" and a node "node", return the parent node if we were to
+//  insert the point into the tree. This is useful because it gives us the
+//  initial guess about the nearest point in the tree.
 template <int DIM, typename REAL>
 typename KDTree<DIM, REAL>::Node*
 KDTree<DIM, REAL>::findParent(Node* node, const Point& point)
@@ -178,6 +188,7 @@ KDTree<DIM, REAL>::findParent(Node* node, const Point& point)
     }
 }
 
+// This is just a brute force O(n) search. Use only for testing.
 template <int DIM, typename REAL>
 int
 KDTree<DIM, REAL>::findNearestBruteForce(const Point& pt)
