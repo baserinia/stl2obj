@@ -17,10 +17,14 @@
 #define TYPE_GEOMBASE_H_
 #pragma once
 
+// forward declaration
+template<typename T> class Visitor;
+
 template<typename T>
 class GeomBase {
-    void accept(Visitor& v) {
-        static_cast<T*>(this)->accept(v);
+public:
+    virtual void visit(Visitor<T>&& v) {
+        static_cast<T*>(this)->visit(std::move(v));
     }
 };
 
