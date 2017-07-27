@@ -98,10 +98,10 @@ int main (int argc, char **argv)
     Geometry tessel;
 
 //  fill up the tesselation object with STL data (load STL)
-    tessel.visit (ImportSTL ("Fidgit.stl"));
+    tessel.visit (ImportSTL (argv[optind]));
 
 //  write down the tesselation object into OBJ file (save OBJ)
-    tessel.visit (ExportOBJ ("file.obj"));
+    tessel.visit (ExportOBJ (argv[optind + 1]));
 
 
     return EXIT_SUCCESS;
