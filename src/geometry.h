@@ -13,22 +13,28 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-#ifndef TYPE_GEOMBASE_H_
-#define TYPE_GEOMBASE_H_
+#ifndef TYPE_GEOMETRY_H_
+#define TYPE_GEOMETRY_H_
 #pragma once
 
+#include <vector>
 #include "vectornd.h"
+#include "geombase.h"
+#include "visitor.h"
 
-
+// CRTP is used to avoid dynamic polymorphism
 class Geometry : public GeomBase<Geometry> {
-    std::vector<VectorND<>> verts_;     // list of vertices
-    std::vector<unsigned[3]> faces_;    // list of triangles
+//  list of vertices as a vector of 3D points
+    std::vector<VectorND<>> verts_;
+//  list of triangular faces as a vector of 3 indices. The indices point to
+//  the vertices in verts_.
+    std::vector<unsigned[3]> faces_;
 public:
     Geometry() {}
 
-    void accept(Visitor& v) {
-        v.dispatch();
+    void visit(Visitor<Geometry>&& v) {
+        v.dispatch(*this);
     }
 };
 
-#endif // TYPE_GEOMBASE_H_
+#endif // TYPE_GEOMETRY_H_
