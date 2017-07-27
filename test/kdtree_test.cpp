@@ -35,7 +35,7 @@ int main()
 
 //  create a 3D-tree of double precision
     KDTree<3> tree; 
-    for (int i = 0; i < 100000; i++) {
+    for (int i = 0; i < 1000000; i++) {
         VectorND<> vec (dis(gen), dis(gen), dis(gen));
         tree.insert(vec);
     }
@@ -66,7 +66,7 @@ int main()
         auto t2 = std::chrono::high_resolution_clock::now();
         delt2 += t2 - t1;
 
-//      fail if the search results are different
+//      assert if the results are different
         assert(index1 == index2);
     }
 
