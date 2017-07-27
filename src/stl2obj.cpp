@@ -20,6 +20,9 @@
 #include <getopt.h>
 
 #include "vectornd.h"
+#include "geometry.h"
+#include "importstl.h"
+#include "exportobj.h"
 
 // The name of this program
 static const char* PROGRAM_NAME = "stl2obj";
@@ -91,7 +94,14 @@ int main (int argc, char **argv)
         }
     }
 
-    VectorND<double, 3> vec1 = 1;
+//  create a geometry tesselation object
+    Geometry tessel;
+
+//  fill up the tesselation object with STL data (load STL)
+    tessel.visit (ImportSTL ("Fidgit.stl"));
+
+//  write down the tesselation object into OBJ file (save OBJ)
+    tessel.visit (ExportOBJ ("file.obj"));
 
 
     return EXIT_SUCCESS;
