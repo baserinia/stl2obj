@@ -17,10 +17,17 @@
 #define TYPE_GEOMBASE_H_
 #pragma once
 
-template<typename T>
-class GeomBase {
+#include "vectornd.h"
+
+
+class Geometry : public GeomBase<Geometry> {
+    std::vector<VectorND<>> verts_;     // list of vertices
+    std::vector<unsigned[3]> faces_;    // list of triangles
+public:
+    Geometry() {}
+
     void accept(Visitor& v) {
-        static_cast<T*>(this)->accept(v);
+        v.dispatch();
     }
 };
 
