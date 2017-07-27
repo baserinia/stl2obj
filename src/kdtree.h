@@ -19,6 +19,7 @@
 #define TYPE_KDTREE_H_
 #pragma once
 
+#include <limits>
 #include <vector>
 #include "vectornd.h"
 
