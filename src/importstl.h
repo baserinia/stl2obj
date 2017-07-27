@@ -29,7 +29,7 @@ public:
         filename_(filename) {}
 
     void dispatch(Geometry& model) override {
-        std::cout << "Loading STL file: " << filename_ << std::endl;
+        std::cout << "Loading STL file \"" << filename_ << "\"" << std::endl;
         load(model);
     }
     
