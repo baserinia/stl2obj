@@ -18,4 +18,4 @@ exportobj.o : exportobj.cpp exportobj.h
 
 
 clean :
-	$(RM) stl2obj importstl.o
+	$(RM) stl2obj stl2obj.o importstl.o exportobj.o
