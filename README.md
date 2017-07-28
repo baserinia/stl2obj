@@ -52,7 +52,7 @@ becomes as simple as this:
 
 ## Sample Output
 Here is a sample output for an STL file with 99030 triangles (source:
-[Thingverse:1363827](https://www.thingiverse.com/thing:1363827).
+[Thingverse:1363827](https://www.thingiverse.com/thing:1363827)).
 ```
 $ ./stl2obj Fidgit.stl Fidgit.obj
 Loading STL file "Fidgit.stl"
