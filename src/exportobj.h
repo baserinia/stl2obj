@@ -29,7 +29,7 @@ public:
         filename_(filename) {}
 
     void dispatch(Geometry& model) override {
-        std::cout << "Saving OBJ file: " << filename_ << std::endl;
+        std::cout << "Saving OBJ file: \"" << filename_ << "\"" << std::endl;
         save(model);
     }
 
