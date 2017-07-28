@@ -14,6 +14,7 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <fstream>
+#include <chrono>
 #include "importstl.h"
 #include "vectornd.h"
 #include "kdtree.h"
@@ -39,6 +40,9 @@ VectorND<> read<VectorND<>>(std::ifstream& stream)
 
 void ImportSTL::load(Geometry& model)
 {
+//  let's time the STL import
+    auto t0 = std::chrono::high_resolution_clock::now();
+
     std::ifstream fileSTL (filename_.c_str(), std::ios::in | std::ios::binary);
 
     char header[80];
@@ -76,5 +80,12 @@ void ImportSTL::load(Geometry& model)
 
     std::cout << "Points reduced from " << 3 * numOfTris << " to " << 
         tree.size() << " after merging!" << std::endl;
+
+    std::chrono::duration<double> duration = 
+        std::chrono::high_resolution_clock::now() - t0;
+    std::cout << "Finished reading STL in " << (double)duration.count() <<
+        " seconds!" << std::endl;
+        
+
 }
 
