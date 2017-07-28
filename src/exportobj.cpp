@@ -14,12 +14,15 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <fstream>
+#include <chrono>
 #include "exportobj.h"
 #include "vectornd.h"
 
 
 void ExportOBJ::save(Geometry& model)
 {
+    auto t0 = std::chrono::high_resolution_clock::now();
+
     std::ofstream fileOBJ (filename_.c_str(), std::ios::out);
 
     fileOBJ << "# Object name" << std::endl;
@@ -46,5 +49,10 @@ void ExportOBJ::save(Geometry& model)
     }
     fileOBJ << "# End list of faces" << std::endl;
     fileOBJ << std::endl;
+
+    std::chrono::duration<double> duration = 
+        std::chrono::high_resolution_clock::now() - t0;
+    std::cout << "Finished writing OBJ in " << (double)duration.count() <<
+        " seconds!" << std::endl;
 }
 
