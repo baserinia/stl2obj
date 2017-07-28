@@ -48,4 +48,17 @@ becomes as simple as this:
 
 //  save OBJ (e.g. output.obj)
     tessel.visit (ExportOBJ ("output.obj"));
+```
 
+## Sample Output
+Here is a sample output for an STL file with 99030 triangles (source:
+[Thingverse:1363827](https://www.thingiverse.com/thing:1363827).
+```
+$ ./stl2obj Fidgit.stl Fidgit.obj
+Loading STL file "Fidgit.stl"
+Reading 33010 triangles ...
+Points reduced from 99030 to 16523 after merging!
+Finished reading STL in 0.740978 seconds!
+Saving OBJ file: "Fidgit.obj"
+Finished writing OBJ in 0.0668869 seconds
+```
