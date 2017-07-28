@@ -18,13 +18,13 @@ and merging points. The K-D is parametrized as a template, so it can be used
 in arbitrary dimension (2, 3, or higher dimensions).
 
 ## Design Pattern
-The nice thing about STL and OBJ formats is that, the underlying data structures
+The nice thing about STL and OBJ formats is that the underlying data structures
 are very similar. In both cases, we have a set of vertices, and a set of
-polygons which connect those points. Since the undrlying data is similar, we
-can avoid copying data thereby speeding up the translation.
+polygons which connect those vertices. Since the undrlying data is similar, we
+can avoid copying data, thereby speeding up the translation.
 
 The geometry data is stored as an instance of the "Geometry" template class. This
-class is derived from "GeomBase<Geometry>" class using the CRTP design pattern.
+class is derived from "GeomBase<Geometry>" class using the CRTP idiom.
 This technique is very useful since we might want to create new geometry
 data types in the future. Note that the class "Geometry" is designed only for
 storing data, so it cannot read or write its content.
@@ -32,8 +32,9 @@ storing data, so it cannot read or write its content.
 For importing STL files and exporing OBJ files, we use the visitor design
 pattern. We create an abstract class, named "Visitor", which has a single
 dispatch function. Every operation on the data, including STL import and OBJ
-export, is defined as a type derived from Visitor. using this desing, we can
-easily add new functionality to the geometry data type.
+export, is defined as a new type derived from Visitor. using this pattern, we can
+easily add new functions to the geometry data type. For example, we can
+add another exporter for PLY data format, without changing anything in the code.
 
 In summary, the final code for reading an STL file and writing it to OBJ format
 becomes as simple as this:
