@@ -62,3 +62,5 @@ Finished reading STL in 0.740978 seconds!
 Saving OBJ file: "Fidget.obj"
 Finished writing OBJ in 0.0668869 seconds
 ```
+
+![Fidget](https://github.com/baserinia/stl2obj/blob/master/example/Fidgit.png)
