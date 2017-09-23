@@ -23,20 +23,20 @@
 #include <vector>
 #include "vectornd.h"
 
-template <int Dim, typename Real = double>
+template <int DIM, typename Real = double>
 class KDTree {
 //  define Point type for convenience
-    using Point = VectorND<Dim, Real>;
+    using Point = VectorND<DIM, Real>;
 
 //  define Node type for private operations on the tree. No one should use
 //  this outside KDTree
     class Node {
-        Node(int id, signed char axis = 0) : id_(id), axis_(axis) {}
+        Node(int id, int8_t axis = 0) : id_(id), axis_(axis) {}
         std::unique_ptr<Node> left_ = nullptr;
         std::unique_ptr<Node> right_ = nullptr;
         uint32_t id_;
         int8_t axis_;
-        friend class KDTree<Dim, Real>;
+        friend class KDTree<DIM, Real>;
     };
 
     using NodePtr = Node*;
@@ -73,18 +73,11 @@ public: // methos
         if (!root_) {
             root_ = std::unique_ptr<Node>(new Node(0));
         } else {
-            Node* node = root_.get();
-            Node* parent = nullptr;
-            while (node) {
-                parent = node;
-                node = (data_[id][node->axis_] <= data_[node->id_][node->axis_])
-                    ? node->left_.get() : node->right_.get();
-            }
-
+            Node* parent = getParentNode(point);
             if (data_[id][parent->axis_] <= data_[parent->id_][parent->axis_]) {
-                parent->left_ = std::unique_ptr<Node>(new Node(id, (parent->axis_ + 1) % Dim));
+                parent->left_ = std::unique_ptr<Node>(new Node(id, (parent->axis_ + 1) % DIM));
             } else {
-                parent->right_ = std::unique_ptr<Node>(new Node(id, (parent->axis_ + 1) % Dim));
+                parent->right_ = std::unique_ptr<Node>(new Node(id, (parent->axis_ + 1) % DIM));
             }
         }
     }
@@ -107,7 +100,7 @@ public: // methos
 
 private: // methods
     int findNearest(Node* node, const Point& point, Real& minDist);
-    const Node* findParent(const Point& point) const;
+    Node* getParentNode(const Point& point) const;
 };
 
 
@@ -117,10 +110,10 @@ private: // methods
 //  2) It traverses the tree once more to find all points that might be closer
 //     to point.
 //  return value: index of the nearest node
-template <int Dim, typename Real>
-int KDTree <Dim, Real>::findNearest(const Point& point)
+template <int DIM, typename Real>
+int KDTree <DIM, Real>::findNearest(const Point& point)
 {
-    const Node* parent = findParent(point);
+    Node* parent = getParentNode(point);
     if (!parent) return -1;
     Real minDist = Point::get_dist_sqr(point, data_[parent->id_]);
     int better = findNearest(root_.get(), point, minDist);
@@ -132,9 +125,9 @@ int KDTree <Dim, Real>::findNearest(const Point& point)
 //  arbitrary large values of "minDist", it's only efficient for small values
 //  of minDist. For large values of minDist, it behaves like a brute-force
 //  search.
-template <int Dim, typename Real>
+template <int DIM, typename Real>
 int
-KDTree<Dim, Real>::findNearest(Node* node, const Point& point, Real& minDist)
+KDTree<DIM, Real>::findNearest(Node* node, const Point& point, Real& minDist)
 {
     if (!node) return -1;
     Real d = Point::get_dist_sqr(point, data_[node->id_]);
@@ -165,9 +158,9 @@ KDTree<Dim, Real>::findNearest(Node* node, const Point& point, Real& minDist)
 //  insert the point into the tree. This is useful because it gives us the
 //  initial guess about the nearest point in the tree.
 
-template <int Dim, class Real>
-const typename KDTree<Dim, Real>::Node*
-KDTree<Dim, Real>::findParent(const Point& point) const
+template <int DIM, class Real>
+typename KDTree<DIM, Real>::Node*
+KDTree<DIM, Real>::getParentNode(const Point& point) const
 {
     Node* node = root_.get();
     Node* parent = nullptr;
@@ -181,9 +174,9 @@ KDTree<Dim, Real>::findParent(const Point& point) const
 
 
 // This is just a brute force O(n) search. Use only for testing.
-template <int Dim, typename Real>
+template <int DIM, typename Real>
 int
-KDTree<Dim, Real>::findNearestBruteForce(const Point& pt)
+KDTree<DIM, Real>::findNearestBruteForce(const Point& pt)
 {
     int index = -1;
     Real minD2 = std::numeric_limits<Real>::max();
