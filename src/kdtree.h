@@ -17,32 +17,32 @@
 
 #ifndef TYPE_KDTREE_H_
 #define TYPE_KDTREE_H_
-#pragma once
 
+#include <memory>
 #include <limits>
 #include <vector>
 #include "vectornd.h"
 
-template <int DIM, typename REAL = double>
+template <int Dim, typename Real = double>
 class KDTree {
 //  define Point type for convenience
-    using Point = VectorND<DIM, REAL>;
+    using Point = VectorND<Dim, Real>;
 
 //  define Node type for private operations on the tree. No one should use
 //  this outside KDTree
     class Node {
-        Node(int id) : id_(id) {}
-        ~Node() { delete left_; delete right_; }
-        Node* left_ = nullptr;
-        Node* right_ = nullptr;
-        unsigned id_;
-        unsigned size_ = 0;
-        signed char axis_ = 0;
-        friend class KDTree<DIM, REAL>;
+        Node(int id, signed char axis = 0) : id_(id), axis_(axis) {}
+        std::unique_ptr<Node> left_ = nullptr;
+        std::unique_ptr<Node> right_ = nullptr;
+        uint32_t id_;
+        int8_t axis_;
+        friend class KDTree<Dim, Real>;
     };
 
+    using NodePtr = Node*;
+
 //  pointer to the root node
-    Node* root_;
+    std::unique_ptr<Node> root_ = nullptr;
 
 //  vector of all points; this can dynamically grow or shrink
 //  Note that this is the sinle data structure for storing points data. The
@@ -53,10 +53,10 @@ class KDTree {
 
 public: // methos
 //  default constructor
-    KDTree() : root_(nullptr) {}
+    KDTree() = default;
 
 //  default destructor
-    ~KDTree() { delete root_; }
+    ~KDTree() = default;
 
 //  delete copy constructor, assignment operator, move constructor, and
 //  move assignment operator. we don't want someone accidentally copies a
@@ -68,8 +68,25 @@ public: // methos
 
 //  insert a new point into the tree
     void insert(const Point& point) {
+        uint32_t id = data_.size();
         data_.push_back(point);
-        root_ = insert(root_, size() - 1);
+        if (!root_) {
+            root_ = std::unique_ptr<Node>(new Node(0));
+        } else {
+            Node* node = root_.get();
+            Node* parent = nullptr;
+            while (node) {
+                parent = node;
+                node = (data_[id][node->axis_] <= data_[node->id_][node->axis_])
+                    ? node->left_.get() : node->right_.get();
+            }
+
+            if (data_[id][parent->axis_] <= data_[parent->id_][parent->axis_]) {
+                parent->left_ = std::unique_ptr<Node>(new Node(id, (parent->axis_ + 1) % Dim));
+            } else {
+                parent->right_ = std::unique_ptr<Node>(new Node(id, (parent->axis_ + 1) % Dim));
+            }
+        }
     }
 
 //  get the current size
@@ -89,38 +106,10 @@ public: // methos
     }
 
 private: // methods
-    size_t size(Node* node);
-    Node* insert(Node* node, int id);
-    int findNearest(Node* node, const Point& point, REAL& minDist);
-    Node* findParent(Node* node, const Point& point);
+    int findNearest(Node* node, const Point& point, Real& minDist);
+    const Node* findParent(const Node* node, const Point& point) const;
 };
 
-
-// private version of size, used only by KDTree
-template <int DIM, typename REAL>
-size_t KDTree<DIM, REAL>::size(Node* node)
-{
-    if (node == nullptr) return 0;
-    return node->size_;
-}
-
-// private version of insert, used only by KDTree
-template <int DIM, typename REAL>
-typename KDTree<DIM, REAL>::Node*
-KDTree<DIM, REAL>::insert(Node* node, int id)
-{
-    if (!node) {
-        return new Node(id);
-    } else if (data_[id][node->axis_] <= data_[node->id_][node->axis_]) {
-        node->left_ = insert(node->left_, id);
-        node->left_->axis_ = (node->axis_ + 1) % DIM;
-    } else {
-        node->right_ = insert(node->right_, id);
-        node->right_->axis_ = (node->axis_ + 1) % DIM;
-    }
-    node->size_ = 1 + size(node->left_) + size(node->right_);
-    return node;
-}
 
 //  Find the nearest point in the data set to "point".
 //  This is the public version of this function. It does two things:
@@ -128,15 +117,14 @@ KDTree<DIM, REAL>::insert(Node* node, int id)
 //  2) It traverses the tree once more to find all points that might be closer
 //     to point.
 //  return value: index of the nearest node
-template <int DIM, typename REAL>
-int KDTree<DIM, REAL>::findNearest(const Point& point)
+template <int Dim, typename Real>
+int KDTree <Dim, Real>::findNearest(const Point& point)
 {
-    Node* parent = findParent(root_, point);
-    if (!parent) return -1;
-    REAL minDist = Point::get_dist_sqr(point, data_[parent->id_]);
-    int better = findNearest(root_, point, minDist);
+    const Node* parent = findParent(root_.get(), point);
+    if (parent == nullptr) return -1;
+    Real minDist = Point::get_dist_sqr(point, data_[parent->id_]);
+    int better = findNearest(root_.get(), point, minDist);
     return (better >= 0) ? better : parent->id_;
-//    return parent->id_;
 }
 
 //  Find the nearest point in the data set to "point"
@@ -144,12 +132,12 @@ int KDTree<DIM, REAL>::findNearest(const Point& point)
 //  arbitrary large values of "minDist", it's only efficient for small values
 //  of minDist. For large values of minDist, it behaves like a brute-force
 //  search.
-template <int DIM, typename REAL>
+template <int Dim, typename Real>
 int
-KDTree<DIM, REAL>::findNearest(Node* node, const Point& point, REAL& minDist)
+KDTree<Dim, Real>::findNearest(Node* node, const Point& point, Real& minDist)
 {
     if (!node) return -1;
-    REAL d = Point::get_dist_sqr(point, data_[node->id_]);
+    Real d = Point::get_dist_sqr(point, data_[node->id_]);
 
     int result = -1;
     if (d < minDist) {
@@ -157,17 +145,17 @@ KDTree<DIM, REAL>::findNearest(Node* node, const Point& point, REAL& minDist)
         minDist = d;
     }
 
-    REAL dp = data_[node->id_][node->axis_] - point[node->axis_];
+    Real dp = data_[node->id_][node->axis_] - point[node->axis_];
     if (dp * dp < minDist) {
-        int pt = findNearest(node->left_, point, minDist);
+        int pt = findNearest(node->left_.get(), point, minDist);
         if (pt >= 0) result = pt;
-        pt = findNearest(node->right_, point, minDist);
+        pt = findNearest(node->right_.get(), point, minDist);
         if (pt >= 0) result = pt;
     } else if (point[node->axis_] <= data_[node->id_][node->axis_]) {
-        int pt = findNearest(node->left_, point, minDist);
+        int pt = findNearest(node->left_.get(), point, minDist);
         if (pt >= 0) result = pt;
     } else {
-        int pt = findNearest(node->right_, point, minDist);
+        int pt = findNearest(node->right_.get(), point, minDist);
         if (pt >= 0) result = pt;
     }
     return result;
@@ -176,28 +164,28 @@ KDTree<DIM, REAL>::findNearest(Node* node, const Point& point, REAL& minDist)
 //  Give a point "point" and a node "node", return the parent node if we were to
 //  insert the point into the tree. This is useful because it gives us the
 //  initial guess about the nearest point in the tree.
-template <int DIM, typename REAL>
-typename KDTree<DIM, REAL>::Node*
-KDTree<DIM, REAL>::findParent(Node* node, const Point& point)
+template <int Dim, class Real>
+const typename KDTree<Dim, Real>::Node*
+KDTree<Dim, Real>::findParent(const Node* node, const Point& point) const
 {
-    if (!node) {
+    if (node == nullptr) {
         return nullptr;
     } else if (point[node->axis_] <= data_[node->id_][node->axis_]) {
-        return node->left_ ? findParent(node->left_, point) : node;
+        return node->left_ != nullptr ? findParent(node->left_.get(), point) : node;
     } else {
-        return node->right_ ? findParent(node->right_, point) : node;
+        return node->right_ != nullptr ? findParent(node->right_.get(), point) : node;
     }
 }
 
 // This is just a brute force O(n) search. Use only for testing.
-template <int DIM, typename REAL>
+template <int Dim, typename Real>
 int
-KDTree<DIM, REAL>::findNearestBruteForce(const Point& pt)
+KDTree<Dim, Real>::findNearestBruteForce(const Point& pt)
 {
     int index = -1;
-    REAL minD2 = std::numeric_limits<REAL>::max();
+    Real minD2 = std::numeric_limits<Real>::max();
     for (int i = 0; i < data_.size(); i++) {
-        REAL d2 = Point::get_dist_sqr(pt, data_[i]);
+        Real d2 = Point::get_dist_sqr(pt, data_[i]);
         if (d2 < minD2) {
             minD2 = d2;
             index = i;
