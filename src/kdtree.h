@@ -32,8 +32,9 @@ class KDTree {
 //  this outside KDTree
     class Node {
         Node(int id, int8_t axis = 0) : id_(id), axis_(axis) {}
-        std::unique_ptr<Node> left_ = nullptr;
-        std::unique_ptr<Node> right_ = nullptr;
+        ~Node() { delete left_; delete right_; }
+        Node* left_ = nullptr;
+        Node* right_ = nullptr;
         uint32_t id_;
         int8_t axis_;
         friend class KDTree<DIM, Real>;
@@ -42,7 +43,7 @@ class KDTree {
     using NodePtr = Node*;
 
 //  pointer to the root node
-    std::unique_ptr<Node> root_ = nullptr;
+    Node* root_ = nullptr;
 
 //  vector of all points; this can dynamically grow or shrink
 //  Note that this is the sinle data structure for storing points data. The
@@ -56,7 +57,7 @@ public: // methos
     KDTree() = default;
 
 //  default destructor
-    ~KDTree() = default;
+    ~KDTree() { delete root_; }
 
 //  delete copy constructor, assignment operator, move constructor, and
 //  move assignment operator. we don't want someone accidentally copies a
@@ -94,13 +95,13 @@ void KDTree<DIM, Real>::insert(const Point& point) {
     uint32_t id = data_.size();
     data_.push_back(point);
     if (!root_) {
-        root_ = std::unique_ptr<Node>(new Node(0));
+        root_ = new Node(0, 0);
     } else {
         Node* parent = getParentNode(point);
         if (data_[id][parent->axis_] <= data_[parent->id_][parent->axis_]) {
-            parent->left_ = std::unique_ptr<Node>(new Node(id, (parent->axis_ + 1) % DIM));
+            parent->left_ = new Node(id, (parent->axis_ + 1) % DIM);
         } else {
-            parent->right_ = std::unique_ptr<Node>(new Node(id, (parent->axis_ + 1) % DIM));
+            parent->right_ = new Node(id, (parent->axis_ + 1) % DIM);
         }
     }
 }
@@ -118,7 +119,7 @@ int KDTree <DIM, Real>::findNearest(const Point& point)
     Node* parent = getParentNode(point);
     if (!parent) return -1;
     Real minDist = Point::get_dist_sqr(point, data_[parent->id_]);
-    int better = findNearest(root_.get(), point, minDist);
+    int better = findNearest(root_, point, minDist);
     return (better >= 0) ? better : parent->id_;
 }
 
@@ -142,15 +143,15 @@ KDTree<DIM, Real>::findNearest(Node* node, const Point& point, Real& minDist)
 
     Real dp = data_[node->id_][node->axis_] - point[node->axis_];
     if (dp * dp < minDist) {
-        int pt = findNearest(node->left_.get(), point, minDist);
+        int pt = findNearest(node->left_, point, minDist);
         if (pt >= 0) result = pt;
-        pt = findNearest(node->right_.get(), point, minDist);
+        pt = findNearest(node->right_, point, minDist);
         if (pt >= 0) result = pt;
     } else if (point[node->axis_] <= data_[node->id_][node->axis_]) {
-        int pt = findNearest(node->left_.get(), point, minDist);
+        int pt = findNearest(node->left_, point, minDist);
         if (pt >= 0) result = pt;
     } else {
-        int pt = findNearest(node->right_.get(), point, minDist);
+        int pt = findNearest(node->right_, point, minDist);
         if (pt >= 0) result = pt;
     }
     return result;
@@ -164,12 +165,12 @@ template <int DIM, class Real>
 typename KDTree<DIM, Real>::Node*
 KDTree<DIM, Real>::getParentNode(const Point& point) const
 {
-    Node* node = root_.get();
+    Node* node = root_;
     Node* parent = nullptr;
     while (node) {
         parent = node;
         node = (point[node->axis_] <= data_[node->id_][node->axis_])
-            ? node->left_.get() : node->right_.get();
+            ? node->left_ : node->right_;
     }
     return parent;
 }
