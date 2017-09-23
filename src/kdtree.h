@@ -67,21 +67,7 @@ public: // methos
     KDTree& operator=(KDTree&&) = delete;
 
 //  insert a new point into the tree
-    void insert(const Point& point) {
-        uint32_t id = data_.size();
-        data_.push_back(point);
-        if (!root_) {
-            root_ = std::unique_ptr<Node>(new Node(0));
-        } else {
-            Node* parent = getParentNode(point);
-            if (data_[id][parent->axis_] <= data_[parent->id_][parent->axis_]) {
-                parent->left_ = std::unique_ptr<Node>(new Node(id, (parent->axis_ + 1) % DIM));
-            } else {
-                parent->right_ = std::unique_ptr<Node>(new Node(id, (parent->axis_ + 1) % DIM));
-            }
-        }
-    }
-
+    void insert(const Point& point);
 //  get the current size
     size_t size() { return data_.size(); }
 
@@ -102,6 +88,22 @@ private: // methods
     int findNearest(Node* node, const Point& point, Real& minDist);
     Node* getParentNode(const Point& point) const;
 };
+
+template <int DIM, typename Real>
+void KDTree<DIM, Real>::insert(const Point& point) {
+    uint32_t id = data_.size();
+    data_.push_back(point);
+    if (!root_) {
+        root_ = std::unique_ptr<Node>(new Node(0));
+    } else {
+        Node* parent = getParentNode(point);
+        if (data_[id][parent->axis_] <= data_[parent->id_][parent->axis_]) {
+            parent->left_ = std::unique_ptr<Node>(new Node(id, (parent->axis_ + 1) % DIM));
+        } else {
+            parent->right_ = std::unique_ptr<Node>(new Node(id, (parent->axis_ + 1) % DIM));
+        }
+    }
+}
 
 
 //  Find the nearest point in the data set to "point".
