@@ -107,7 +107,7 @@ public: // methos
 
 private: // methods
     int findNearest(Node* node, const Point& point, Real& minDist);
-    const Node* findParent(const Node* node, const Point& point) const;
+    const Node* findParent(const Point& point) const;
 };
 
 
@@ -120,8 +120,8 @@ private: // methods
 template <int Dim, typename Real>
 int KDTree <Dim, Real>::findNearest(const Point& point)
 {
-    const Node* parent = findParent(root_.get(), point);
-    if (parent == nullptr) return -1;
+    const Node* parent = findParent(point);
+    if (!parent) return -1;
     Real minDist = Point::get_dist_sqr(point, data_[parent->id_]);
     int better = findNearest(root_.get(), point, minDist);
     return (better >= 0) ? better : parent->id_;
@@ -164,18 +164,21 @@ KDTree<Dim, Real>::findNearest(Node* node, const Point& point, Real& minDist)
 //  Give a point "point" and a node "node", return the parent node if we were to
 //  insert the point into the tree. This is useful because it gives us the
 //  initial guess about the nearest point in the tree.
+
 template <int Dim, class Real>
 const typename KDTree<Dim, Real>::Node*
-KDTree<Dim, Real>::findParent(const Node* node, const Point& point) const
+KDTree<Dim, Real>::findParent(const Point& point) const
 {
-    if (node == nullptr) {
-        return nullptr;
-    } else if (point[node->axis_] <= data_[node->id_][node->axis_]) {
-        return node->left_ != nullptr ? findParent(node->left_.get(), point) : node;
-    } else {
-        return node->right_ != nullptr ? findParent(node->right_.get(), point) : node;
+    Node* node = root_.get();
+    Node* parent = nullptr;
+    while (node) {
+        parent = node;
+        node = (point[node->axis_] <= data_[node->id_][node->axis_])
+            ? node->left_.get() : node->right_.get();
     }
+    return parent;
 }
+
 
 // This is just a brute force O(n) search. Use only for testing.
 template <int Dim, typename Real>
