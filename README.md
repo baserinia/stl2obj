@@ -54,11 +54,13 @@ becomes as simple as this:
 Here is a sample output for an STL file with 99030 triangles (source:
 [Thingverse:1363827](https://www.thingiverse.com/thing:1363827)).
 ```
-$ ./stl2obj Fidgit.stl Fidgit.obj
-Loading STL file "Fidgit.stl"
+$ ./stl2obj Fidget.stl Fidget.obj
+Loading STL file "Fidget.stl"
 Reading 33010 triangles ...
 Points reduced from 99030 to 16523 after merging!
 Finished reading STL in 0.740978 seconds!
-Saving OBJ file: "Fidgit.obj"
+Saving OBJ file: "Fidget.obj"
 Finished writing OBJ in 0.0668869 seconds
 ```
+
+![Fidget](https://github.com/baserinia/stl2obj/blob/master/example/Fidgit.png)
