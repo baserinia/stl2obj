@@ -44,6 +44,9 @@ void ImportSTL::load(Geometry& model)
     auto t0 = std::chrono::high_resolution_clock::now();
 
     std::ifstream fileSTL (filename_.c_str(), std::ios::in | std::ios::binary);
+	if (!fileSTL.is_open()) {
+		std::cerr << "Failed to open file " << filename_ << std::endl;
+	}
 
     char header[80];
     fileSTL.read (header, 80);
